@@ -3,12 +3,60 @@ import Header from './Header';
 import Task from './Task';
 import AddTaskModal, { CreateTaskDto } from './AddTaskModal';
 import {
+  Task as ITask,
   useCreateTaskMutation,
   useGetTasksQuery,
   useUpdateTaskMutation,
+  useDeleteTaskMutation,
 } from '../state/api/tasksApi';
 import { Skeleton } from '@mui/material'; // Импортируем Skeleton из MUI
 import EditTaskModal from './EditTaskModal';
+import LifeChart from './LifeChart';
+import {
+  ChartData,
+  chartTimeRanges,
+  useGetChartDataQuery,
+} from '../state/api/chartApi';
+
+interface TaskHistoryCardProps {
+  tasks: ITask[];
+  date: string;
+  clickHandler: () => void;
+}
+
+interface TasksByDay {
+  day: string; // Дата в формате YYYY-MM-DD
+  tasks: ITask[]; // Массив задач, сгруппированных по дню
+}
+
+const TaskHistoryCard: React.FC<TaskHistoryCardProps> = ({
+  tasks,
+  date,
+  clickHandler,
+}) => {
+  return (
+    <div className="bg-[#2C3659] p-4 rounded-lg shadow-xl shadow-[#202842] mb-5">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-lg font-bold text-white">{date}</span>
+        <span className="text-lg font-bold text-white">
+          {tasks.length} tasks
+        </span>
+      </div>
+      {tasks.map((task) => (
+        <Task
+          onClick={clickHandler}
+          key={task.id}
+          id={task.id}
+          title={task.title}
+          isCompleted={task.isCompleted}
+          priority={task.priority}
+          score={task.points}
+          isPositive={task.type === 'positive'}
+        />
+      ))}
+    </div>
+  );
+};
 
 const Home = () => {
   const [openModal, setOpenModal] = useState(false);
@@ -17,8 +65,36 @@ const Home = () => {
   const handleCloseModal = () => setOpenModal(false);
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
-  const { data, isLoading } = useGetTasksQuery({ timeRange: 'max' });
+  const [deleteTask] = useDeleteTaskMutation();
+  const [timeRange, setTimeRange] = useState<'max' | 'today'>('today');
+  const { data: tasksList, isLoading } = useGetTasksQuery({ timeRange });
+  const [chartTimeRange, setChartTimeRange] =
+    useState<chartTimeRanges>('7 days');
+  const {
+    data: chartData,
+    isLoading: isLoadingChart,
+    refetch: refetchChartData,
+  } = useGetChartDataQuery(chartTimeRange) as {
+    data: ChartData[];
+    isLoading: boolean;
+    refetch: () => void;
+  };
+  const tasksByDay: TasksByDay[] | undefined = tasksList?.reduce<TasksByDay[]>(
+    (acc, task) => {
+      const day = task.createdAt.split('T')[0]; // Получаем дату без времени (YYYY-MM-DD)
 
+      // Проверяем, есть ли уже такая дата в аккумуляторе
+      const existingDay = acc.find((entry) => entry.day === day);
+      if (existingDay) {
+        existingDay.tasks.push(task); // Добавляем задачу в существующий объект
+      } else {
+        acc.push({ day, tasks: [task] }); // Создаем новый объект для этой даты
+      }
+
+      return acc;
+    },
+    []
+  );
   const handleAddTask = (data: CreateTaskDto) => {
     createTask(data);
     // handleCloseModal();
@@ -26,6 +102,7 @@ const Home = () => {
   const [selectedTask, setSelectedTask] = useState<any>(null);
 
   const [openEditModal, setOpenEditModal] = useState(false);
+
   const handleCloseEditModal = () => setOpenEditModal(false);
 
   // Сохранить изменения в задаче
@@ -36,7 +113,7 @@ const Home = () => {
     await updateTask(updatedTask);
   };
   const handleEditTask = (taskId: string) => {
-    const task = data?.find((task) => task.id === taskId);
+    const task = tasksList?.find((task) => task.id === taskId);
     setSelectedTask(task);
     setOpenEditModal(true);
   };
@@ -45,25 +122,84 @@ const Home = () => {
       <Header />
       <div className="container mx-auto h-[calc(100vh-64px)] pt-[55px]">
         <div className="flex justify-between gap-14">
-          <div className="w-[1120px] bg-[#2C3659] p-6 rounded-lg h-[calc(100vh-174px)]">
-            <h1 className="text-4xl font-bold text-gray-800">
-              Welcome to the Home Page
-            </h1>
-            <p className="mt-4 text-lg text-gray-600">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              Consequatur tenetur voluptatem, magnam sunt earum quas molestias
-              maxime? Facilis excepturi iusto deserunt amet, eaque officiis
-              laboriosam, ullam expedita, minus esse libero.
-            </p>
+          <div className="w-[1120px] bg-[#2C3659] rounded-lg h-[calc(100vh-174px)]">
+            <div className="flex items-center h-[40px] bg-[#28304D] rounded-lg mb-6">
+              {['7 days', 'this week', '30 days', 'this month', 'max'].map(
+                (range) => (
+                  <button
+                    key={range}
+                    className={`${
+                      chartTimeRange === range
+                        ? 'bg-[#2C3659] text-white'
+                        : 'bg-[#28304D] text-[#B0BAC9]'
+                    } px-4 py-2`}
+                    onClick={() => {
+                      setChartTimeRange(range as chartTimeRanges);
+                      refetchChartData();
+                    }}
+                  >
+                    {range}
+                  </button>
+                )
+              )}
+            </div>
+            <LifeChart
+              // chartData={[
+              //   {
+              //     position: [30, 40],
+              //     date: '20.11.24',
+              //   },
+              //   {
+              //     position: [40, 20],
+              //     date: '25.11.24',
+              //   },
+              //   {
+              //     position: [20, 30],
+              //     date: '26.11.24',
+              //   },
+              //   {
+              //     position: [30, 25],
+              //     date: '27.11.24',
+              //   },
+              //   {
+              //     position: [25, 10],
+              //     date: '28.11.24',
+              //   },
+              //   {
+              //     position: [10, 20],
+              //     date: '29.11.24',
+              //   },
+              //   {
+              //     position: [20, 35],
+              //     date: '30.11.24',
+              //   },
+              //   {
+              //     position: [35, 75],
+              //     date: '01.12.24',
+              //   },
+              // ]}
+              chartData={chartData}
+              isLoading={isLoadingChart}
+            />
           </div>
           <div className="w-[550px] h-[calc(100vh-174px)] rounded-lg overflow-auto bg-[#2C3659] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-white">Tasks</h2>
+            <div className="flex items-center justify-between mb-4 gap-4">
               <button
-                className="px-4 py-2 bg-[#FF0000] text-white rounded-lg"
+                className="bg-[#28304D] h-[48px] px-4 py-2 rounded-lg text-white w-[50%]"
                 onClick={handleOpenModal}
               >
-                Add Task
+                New Task
+              </button>
+
+              <button
+                className="bg-[#28304D] h-[48px] px-4 py-2 rounded-lg text-white w-[50%]"
+                onClick={() => {
+                  setTimeRange((r: string) =>
+                    r === 'today' ? 'max' : 'today'
+                  );
+                }}
+              >
+                {timeRange === 'max' ? 'Today' : 'Task History'}
               </button>
             </div>
             {isLoading ? (
@@ -78,18 +214,54 @@ const Home = () => {
                 ))}
               </div>
             ) : (
-              data?.map((task) => (
-                <Task
-                  key={task.id}
-                  id={task.id}
-                  title={task.title}
-                  isCompleted={task.isCompleted}
-                  priority={task.priority}
-                  score={task.points}
-                  isPositive={task.type === 'positive'}
-                  onClick={() => handleEditTask(task.id)}
-                />
-              ))
+              <>
+                {timeRange === 'max' ? (
+                  tasksByDay?.map((task) => (
+                    <TaskHistoryCard
+                      key={task.day}
+                      date={task.day}
+                      tasks={task.tasks}
+                      clickHandler={() => handleEditTask(task.tasks[0].id)}
+                    />
+                  ))
+                ) : tasksList?.length ? (
+                  tasksList.map((task) => (
+                    <Task
+                      onClick={() => handleEditTask(task.id)}
+                      key={task.id}
+                      id={task.id}
+                      title={task.title}
+                      isCompleted={task.isCompleted}
+                      priority={task.priority}
+                      score={task.points}
+                      isPositive={task.type === 'positive'}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center text-white bg-[#28304D] p-6 rounded-lg shadow-xl shadow-[#202842] mb-5">
+                    <p>No tasks available.</p>
+                    <p>
+                      Click{' '}
+                      <span
+                        className="text-white underline"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => setTimeRange('max')}
+                      >
+                        here
+                      </span>{' '}
+                      to view task history or{' '}
+                      <span
+                        className="text-white underline"
+                        style={{ cursor: 'pointer' }}
+                        onClick={handleOpenModal}
+                      >
+                        here
+                      </span>{' '}
+                      to add a new task.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -104,6 +276,10 @@ const Home = () => {
 
       {/* Модалка для редактирования задачи */}
       <EditTaskModal
+        deleteTask={() => {
+          deleteTask(selectedTask?.id);
+          handleCloseEditModal();
+        }}
         open={openEditModal}
         onClose={handleCloseEditModal}
         task={selectedTask}

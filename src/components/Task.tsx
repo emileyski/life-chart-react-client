@@ -1,5 +1,7 @@
 import React from 'react';
 import Checkbox from './Checkbox';
+import { useChangeTaskStatusMutation } from '../state/api/tasksApi';
+import EditIcon from '@mui/icons-material/Edit'; // Импорт иконки
 
 interface TaskProps {
   id: string;
@@ -27,11 +29,10 @@ const Task: React.FC<TaskProps> = ({
       : `-${score}`
     : `${score}`;
 
+  const [changeTaskStatus] = useChangeTaskStatusMutation();
+
   return (
-    <div
-      className="flex items-center justify-between bg-[#28304D] p-3 mb-4 cursor-pointer"
-      onClick={onClick} // Когда кликаем на задачу, передаем обработчик
-    >
+    <div className="flex items-center justify-between bg-[#28304D] p-3 mb-4">
       <div className="flex items-center">
         <img
           src={`./priorities/${priority}.svg`}
@@ -45,9 +46,9 @@ const Task: React.FC<TaskProps> = ({
           className={`h-[10px] w-[10px] rounded-full ${pointColor} mr-2`}
         ></div>
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <span
-          className={`text-[16px] mr-3 ${
+          className={`text-[16px] mr-2 ${
             isCompleted
               ? isPositive
                 ? 'text-[#31DF01]'
@@ -57,7 +58,14 @@ const Task: React.FC<TaskProps> = ({
         >
           {scoreText}
         </span>
-        <Checkbox checked={isCompleted} onChange={() => {}} />
+        <Checkbox
+          checked={isCompleted}
+          onChange={async () => {
+            await changeTaskStatus({ id, isCompleted: !isCompleted }).unwrap();
+          }}
+        />
+        {/* иконка карандаша если она есть в mui*/}
+        <EditIcon className="text-white cursor-pointer" onClick={onClick} />
       </div>
     </div>
   );

@@ -98,10 +98,6 @@ export const authApi = createApi({
       }),
     }),
     signOut: builder.mutation<void, void>({
-      // query: () => '/auth/sign-out',
-      // headers: {
-      //   Authorization: `Bearer ${localStorage.getItem('refreshToken')}`,
-      // },
       query: () => ({
         url: '/auth/sign-out',
         method: 'POST',

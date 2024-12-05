@@ -103,6 +103,61 @@ export const tasksApi = createApi({
         }
       },
     }),
+
+    deleteTask: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `task/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Task'],
+    }),
+    changeTaskStatus: builder.mutation<
+      Task,
+      { id: string; isCompleted: boolean }
+    >({
+      query: ({ id, isCompleted }) => ({
+        url: `task/change-status/${id}`,
+        method: 'POST',
+        body: { isCompleted },
+      }),
+      // После успешного выполнения запроса обновляем кэш
+      async onQueryStarted({ id, isCompleted }, { dispatch, queryFulfilled }) {
+        try {
+          // Дождёмся выполнения запроса
+          const { data } = await queryFulfilled;
+
+          // Обновляем список задач в кэше
+          dispatch(
+            tasksApi.util.updateQueryData(
+              'getTasks',
+              { timeRange: 'max' }, // или другой используемый фильтр
+              (draft) => {
+                const task = draft.find((t) => t.id === id);
+                if (task) {
+                  task.isCompleted = isCompleted;
+                }
+              }
+            )
+          );
+
+          dispatch(
+            tasksApi.util.updateQueryData(
+              'getTasks',
+              { timeRange: 'today' }, // или другой используемый фильтр
+              (draft) => {
+                const task = draft.find((t) => t.id === id);
+                if (task) {
+                  task.isCompleted = isCompleted;
+                }
+              }
+            )
+          );
+        } catch (error) {
+          console.error('Failed to update task status in cache:', error);
+        }
+      },
+      invalidatesTags: (result, error, { id }) => [{ type: 'Task', id }],
+    }),
   }),
 });
 
@@ -111,4 +166,6 @@ export const {
   useCreateTaskMutation,
   useUpdateTaskMutation,
   useGetTaskQuery, // Хук для получения одной задачи
+  useDeleteTaskMutation,
+  useChangeTaskStatusMutation,
 } = tasksApi;

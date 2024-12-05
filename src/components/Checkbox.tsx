@@ -13,7 +13,11 @@ const Checkbox: React.FC<CheckboxProps> = ({ checked, onChange }) => {
         type="checkbox"
         className="peer hidden"
         checked={checked}
-        onChange={onChange}
+        onChange={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onChange();
+        }}
       />
       <div
         className={`w-[20px] h-[20px] bg-[#2C3659] border-2 border-white rounded-sm transition-all duration-200

@@ -17,6 +17,7 @@ interface AddTaskModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: CreateTaskDto) => void;
+  deleteTask?: () => void;
 }
 
 export interface CreateTaskDto {
@@ -141,8 +142,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             }
             label="Is Regular"
           />
-          <div className="flex justify-end mt-4">
-            <Button onClick={onClose} className="mr-2">
+          <div className="flex justify-between mt-4">
+            <Button
+              onClick={onClose}
+              className="mr-2"
+              variant="contained"
+              color="secondary"
+            >
               Cancel
             </Button>
             <Button variant="contained" color="primary" onClick={handleSubmit}>

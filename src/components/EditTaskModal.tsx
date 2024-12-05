@@ -1,3 +1,4 @@
+import { Button } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 
 interface EditTaskModalProps {
@@ -19,6 +20,7 @@ interface EditTaskModalProps {
     isCompleted: boolean;
     isPositive: boolean;
   }) => void;
+  deleteTask: () => void;
 }
 
 const EditTaskModal: React.FC<EditTaskModalProps> = ({
@@ -26,6 +28,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
   onClose,
   task,
   onSubmit,
+  deleteTask,
 }) => {
   const [updatedTask, setUpdatedTask] = useState(task);
 
@@ -127,14 +130,15 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
               className="mt-1"
             />
           </div>
-          <div className="flex justify-between">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-500 text-white rounded-md"
-            >
-              Close
-            </button>
+          <div className="flex justify-between mt-4">
+            <div className="flex gap-2">
+              <Button variant="contained" color="secondary" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button variant="contained" color="error" onClick={deleteTask}>
+                Delete
+              </Button>
+            </div>
             <button
               type="submit"
               className="px-4 py-2 bg-blue-500 text-white rounded-md"
