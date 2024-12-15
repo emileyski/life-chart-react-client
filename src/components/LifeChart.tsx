@@ -34,6 +34,18 @@ const LifeChart: React.FC<LifeChartProps> = ({ chartData, isLoading }) => {
     },
   };
 
+  if (chartData?.length < 20) {
+    const emptyData = Array.from(
+      { length: 20 - chartData.length },
+      () =>
+        ({
+          date: '',
+          position: [null, null],
+        } as ChartData)
+    );
+    chartData = [...chartData, ...emptyData];
+  }
+
   // Формируем данные для графика
   const data = [
     ['day', 'a', 'b', 'c', 'd'],
@@ -64,9 +76,9 @@ const LifeChart: React.FC<LifeChartProps> = ({ chartData, isLoading }) => {
       ) : (
         <Chart
           chartType="CandlestickChart"
-          width={`${Math.max(data.length * 50, 400)}px`} // Динамическая ширина
-          height="700px"
+          style={{ width: '100%', height: '700px' }}
           data={data}
+          className="w-full"
           options={chartOptions}
         />
       )}

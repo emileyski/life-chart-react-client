@@ -9,6 +9,7 @@ interface TaskProps {
   isCompleted: boolean;
   priority: 'low' | 'medium' | 'high' | 'highest';
   score: number;
+  createdAt: string;
   isPositive: boolean;
   onClick: () => void; // Обработчик для клика по задаче
 }
@@ -19,6 +20,7 @@ const Task: React.FC<TaskProps> = ({
   isCompleted,
   priority,
   score,
+  createdAt,
   isPositive,
   onClick,
 }) => {
@@ -30,6 +32,41 @@ const Task: React.FC<TaskProps> = ({
     : `${score}`;
 
   const [changeTaskStatus] = useChangeTaskStatusMutation();
+  const determineIsTaskFromPast = (createdAt: string): boolean => {
+    const taskDate = new Date(createdAt); // Дата задачи
+    const todayStart = new Date(); // Текущая дата
+    todayStart.setHours(0, 0, 0, 0); // Устанавливаем начало дня (00:00)
+
+    return taskDate < todayStart; // true, если задача создана до сегодняшнего дня
+  };
+  const determineTypeAndChecked = ({
+    isPositive,
+    isCompleted,
+    createdAt,
+  }: {
+    isPositive: boolean;
+    isCompleted: boolean;
+    createdAt: string;
+  }): {
+    type: 'positive' | 'negative' | undefined;
+    checked: boolean;
+  } => {
+    // Проверяем, является ли задача старой (вчера или раньше)
+    const isTaskFromPast = determineIsTaskFromPast(createdAt);
+
+    // Определяем состояние "checked"
+    const checked = isTaskFromPast || isCompleted;
+
+    // Определяем тип задачи
+    const type =
+      (isCompleted || isTaskFromPast) && !(!isPositive && !isCompleted)
+        ? 'positive'
+        : isTaskFromPast && !isCompleted
+        ? 'negative'
+        : undefined;
+
+    return { type, checked };
+  };
 
   return (
     <div className="flex items-center justify-between bg-[#28304D] p-3 mb-4">
@@ -59,9 +96,23 @@ const Task: React.FC<TaskProps> = ({
           {scoreText}
         </span>
         <Checkbox
-          checked={isCompleted}
+          {...determineTypeAndChecked({ isPositive, isCompleted, createdAt })}
           onChange={async () => {
-            await changeTaskStatus({ id, isCompleted: !isCompleted }).unwrap();
+            // let newIsCompleted = null;
+
+            // if (typeof isCompleted !== 'boolean') {
+            //   newIsCompleted = isPositive ? true : false;
+            // }
+
+            // await changeTaskStatus({
+            //   id,
+            //   isCompleted: !newIsCompleted,
+            // }).unwrap();
+
+            await changeTaskStatus({
+              id,
+              isCompleted: !isCompleted,
+            }).unwrap();
           }}
         />
         {/* иконка карандаша если она есть в mui*/}

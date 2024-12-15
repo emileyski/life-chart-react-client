@@ -57,7 +57,10 @@ export const tasksApi = createApi({
         // headers: {
         //   Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         // },
-        body: data,
+        body: {
+          ...data,
+          points: Number(data.points),
+        },
       }),
       invalidatesTags: ['Task'],
     }),

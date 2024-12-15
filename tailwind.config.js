@@ -8,6 +8,8 @@ export default {
   theme: {
     extend: {
       colors: {
+        scrollbarThumb: '#16ac80',
+        scrollbarTrack: '#2C3659',
         border: 'hsl(var(--border) / <alpha-value>)',
         input: 'hsl(var(--input) / <alpha-value>)',
         ring: 'hsl(var(--ring) / <alpha-value>)',
@@ -52,5 +54,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [require('tailwind-scrollbar')],
 };

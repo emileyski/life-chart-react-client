@@ -6,9 +6,8 @@ import { baseQueryWithReauth } from './authApi';
 //   '30_DAYS' = '30 days',
 //   THIS_MONTH = 'this month',
 //   MAX = 'max',
-
 export interface ChartData {
-  position: [number, number];
+  position: [number | null, number | null];
   date: string;
 }
 

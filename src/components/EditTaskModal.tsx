@@ -98,7 +98,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
               className="mt-1 p-2 border border-gray-300 rounded-md w-full"
             />
           </div>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center gap-2">
             <label className="block text-sm font-medium text-gray-700">
               Completed
             </label>
@@ -114,7 +114,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
               className="mt-1"
             />
           </div>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center gap-2">
             <label className="block text-sm font-medium text-gray-700">
               Positive
             </label>

@@ -44,6 +44,7 @@ const TaskHistoryCard: React.FC<TaskHistoryCardProps> = ({
       </div>
       {tasks.map((task) => (
         <Task
+          createdAt={task.createdAt}
           onClick={clickHandler}
           key={task.id}
           id={task.id}
@@ -143,46 +144,9 @@ const Home = () => {
                 )
               )}
             </div>
-            <LifeChart
-              // chartData={[
-              //   {
-              //     position: [30, 40],
-              //     date: '20.11.24',
-              //   },
-              //   {
-              //     position: [40, 20],
-              //     date: '25.11.24',
-              //   },
-              //   {
-              //     position: [20, 30],
-              //     date: '26.11.24',
-              //   },
-              //   {
-              //     position: [30, 25],
-              //     date: '27.11.24',
-              //   },
-              //   {
-              //     position: [25, 10],
-              //     date: '28.11.24',
-              //   },
-              //   {
-              //     position: [10, 20],
-              //     date: '29.11.24',
-              //   },
-              //   {
-              //     position: [20, 35],
-              //     date: '30.11.24',
-              //   },
-              //   {
-              //     position: [35, 75],
-              //     date: '01.12.24',
-              //   },
-              // ]}
-              chartData={chartData}
-              isLoading={isLoadingChart}
-            />
+            <LifeChart chartData={chartData} isLoading={isLoadingChart} />
           </div>
-          <div className="w-[550px] h-[calc(100vh-174px)] rounded-lg overflow-auto bg-[#2C3659] p-6">
+          <div className="w-[550px] h-[calc(100vh-174px)] rounded-lg overflow-auto bg-[#2C3659] p-6 scrollbar-thin scrollbar-thumb-scrollbarThumb scrollbar-track-scrollbarTrack">
             <div className="flex items-center justify-between mb-4 gap-4">
               <button
                 className="bg-[#28304D] h-[48px] px-4 py-2 rounded-lg text-white w-[50%]"
@@ -225,18 +189,12 @@ const Home = () => {
                     />
                   ))
                 ) : tasksList?.length ? (
-                  tasksList.map((task) => (
-                    <Task
-                      onClick={() => handleEditTask(task.id)}
-                      key={task.id}
-                      id={task.id}
-                      title={task.title}
-                      isCompleted={task.isCompleted}
-                      priority={task.priority}
-                      score={task.points}
-                      isPositive={task.type === 'positive'}
-                    />
-                  ))
+                  <TaskHistoryCard
+                    key={tasksList[0].createdAt}
+                    date={tasksList[0].createdAt.split('T')[0]}
+                    tasks={tasksList}
+                    clickHandler={() => handleEditTask(tasksList[0].id)}
+                  />
                 ) : (
                   <div className="text-center text-white bg-[#28304D] p-6 rounded-lg shadow-xl shadow-[#202842] mb-5">
                     <p>No tasks available.</p>
